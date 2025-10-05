@@ -1,0 +1,15 @@
+# AI Automation Requirements
+# Install: pip install -r requirements-automation.txt
+
+# Core dependencies
+httpx>=0.27.0          # Async HTTP client for API calls
+python-dotenv>=1.0.0   # Environment variable management
+PyYAML>=6.0.1          # YAML config parsing
+
+# Optional: LiteLLM proxy support
+litellm>=1.30.0        # Unified AI API proxy (optional)
+
+# Development
+black>=24.0.0          # Code formatting
+mypy>=1.8.0            # Type checking
+ruff>=0.2.0            # Linting

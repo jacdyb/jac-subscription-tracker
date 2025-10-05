@@ -5,3 +5,11 @@
 .DS_Store
 .idea/
 .vscode/
+
+# Environment variables
+.env
+.env.local
+
+# AI automation
+.deepinfra_budget.json
+.ai_requests.log
