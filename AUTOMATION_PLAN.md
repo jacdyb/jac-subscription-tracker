@@ -9,14 +9,16 @@
 ## Spis Treści
 
 1. [Overview](#overview)
-2. [AI Tools Setup](#ai-tools-setup)
-3. [Automation Strategy](#automation-strategy)
-4. [Phase-by-Phase Automation](#phase-by-phase-automation)
-5. [Orchestration Scripts](#orchestration-scripts)
-6. [Quality Gates](#quality-gates)
-7. [Monitoring & Progress Tracking](#monitoring--progress-tracking)
-8. [Prompt Library](#prompt-library)
-9. [Troubleshooting](#troubleshooting)
+2. [AI Models & Licenses](#ai-models--licenses)
+3. [Context Protection](#context-protection)
+4. [AI Tools Setup](#ai-tools-setup)
+5. [Automation Strategy](#automation-strategy)
+6. [Phase-by-Phase Automation](#phase-by-phase-automation)
+7. [Orchestration Scripts](#orchestration-scripts)
+8. [Quality Gates](#quality-gates)
+9. [Monitoring & Progress Tracking](#monitoring--progress-tracking)
+10. [Prompt Library](#prompt-library)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -26,10 +28,11 @@
 Automatyzacja maksymalnie dużej części refactoru (60-70%) przy wykorzystaniu AI tools dostępnych w VS Code, zachowując wysoką jakość kodu i pełną kontrolę nad procesem.
 
 ### AI Tools Stack
-- **Claude Code** (ten interfejs) - complex logic, multi-file operations, main orchestrator
-- **GitHub Copilot** - boilerplate code, tests, quick completions
-- **Gemini Code Assist** - validation, alternative solutions
-- **OpenAI Codex** (przez Copilot) - optional fallback
+- **Claude Code** (Claude Pro) - complex logic, multi-file operations, architecture
+- **GitHub Copilot** (Copilot Pro) - boilerplate code, tests, quick completions
+- **Gemini Code Assist** (Google AI Pro) - validation, code review (1M context!)
+- **ChatGPT Plus** (GPT-4 Turbo) - algorithms, debugging, edge cases
+- **DeepInfra** (Qwen 2.5 Coder) - batch processing (budget: $10)
 
 ### Kluczowe Zasady
 1. **AI generuje → Human review → Commit** (nigdy na odwrót)
@@ -37,6 +40,7 @@ Automatyzacja maksymalnie dużej części refactoru (60-70%) przy wykorzystaniu 
 3. **Test-driven** - testy przed/z kodem
 4. **Version control** - commit po każdej fazie
 5. **Quality gates** - automatyczna walidacja przed merge
+6. **Model selection** - wybór optymalnego modelu do zadania (GPT-4o free tier dla 90% tasków)
 
 ### Estymowany Stopień Automatyzacji
 
@@ -51,6 +55,304 @@ Automatyzacja maksymalnie dużej części refactoru (60-70%) przy wykorzystaniu 
 | **Tests (Frontend)** | 75% | 1 tydzień | 2-3 dni |
 | **Documentation** | 90% | 3 dni | 4-6 godzin |
 | **Overall** | **~65-70%** | **11-15 tyg** | **5-6 tyg** |
+
+---
+
+## AI Models & Licenses
+
+### Pełna Specyfikacja
+
+**Szczegółowa dokumentacja:** [AI_MODELS_REFERENCE.md](./AI_MODELS_REFERENCE.md)
+
+### Podsumowanie Modeli
+
+| License | Monthly Cost | Primary Model | Context | Daily Limit | Use Case |
+|---------|--------------|---------------|---------|-------------|----------|
+| **Claude Pro** | $20 | Claude Sonnet 4.5 | 200k | ~500 msg | Complex logic, architecture |
+| **Copilot Pro** | $10 | GPT-4o (free tier) | 128k | Unlimited | Boilerplate (90% tasks) |
+| **ChatGPT Plus** | $20 | GPT-4 Turbo | 128k | ~40-80/3h | Algorithms, debugging |
+| **Google AI Pro** | $0 | Gemini 2.5 Pro | **1M** | 1000/day | Validation, review |
+| **DeepInfra** | Pay-per-use | Qwen 2.5 Coder 32B | 32k | None | Batch ($10 total) |
+
+### Model Selection Strategy (4 Pillars + Batch)
+
+**Primary (90% tasks):** GPT-4o (Copilot Pro, free tier) - $0
+**Complex logic (5%):** Claude Sonnet 4.5 (Claude Code) - $0
+**Validation (3%):** Gemini 2.5 Pro (Google AI Pro) - $0
+**Algorithms (2%):** GPT-4 Turbo (ChatGPT Plus) - $0
+**Batch (<1%):** Qwen 2.5 Coder (DeepInfra) - $10 total
+
+**TOTAL PROJECT COST:** $10 (DeepInfra tylko)
+
+### DeepInfra Budget Allocation ($10)
+
+1. i18n conversion (25 lang files → 2): **$0.40**
+2. PHP→Python services (batch): **$3.00**
+3. React components (batch): **$2.00**
+4. Buffer: **$4.60**
+
+---
+
+## Context Protection
+
+### Problem
+AI conversations are subject to context compression after ~200k tokens. Critical project constraints (SQLite ONLY, MUI ONLY, 2 languages ONLY) MUST NOT be lost.
+
+### 5-Mechanism Protection Strategy
+
+#### Mechanism 1: Core Context Files
+
+```
+context/
+├── _CORE_CONTEXT.md           # ALWAYS included in ALL prompts
+├── _CURRENT_PHASE.md          # Phase tracking
+├── _PREVIOUS_DECISIONS.md     # Decision log
+└── phase1/
+    ├── models_context.md
+    ├── schemas_context.md
+    └── ...
+```
+
+**`context/_CORE_CONTEXT.md`** - Always injected into prompts:
+```markdown
+# CORE PROJECT CONTEXT - DO NOT DEVIATE
+
+## CRITICAL CONSTRAINTS (NEVER FORGET)
+
+1. **Database:** SQLite ONLY - NO PostgreSQL
+2. **UI Library:** Material-UI v5 ONLY - NO Chakra, NO Radix
+3. **Languages:** Polish + English ONLY - NOT 25 languages
+4. **Auth:** JWT + API Key ONLY - NO OIDC/OAuth
+5. **Notifications:** Webhooks ONLY - NO email/discord/telegram
+6. **Calendar:** OUT OF SCOPE
+7. **AI Recommendations:** OUT OF SCOPE
+
+## BUSINESS RULES (CRITICAL)
+
+1. **Price:** MUST be > 0
+2. **Frequency:** 1-365
+3. **Cycle:** days|weeks|months|years ONLY
+4. **Category ID=1:** CANNOT be deleted (default)
+5. **User ownership:** ALWAYS check user_id
+6. **Cascade deletes:** When user deleted → delete all related
+
+## CODE STYLE REQUIREMENTS
+
+### Backend (Python):
+- Type hints EVERYWHERE (Python 3.11+)
+- Docstrings: Google style
+- Async/await for all DB operations
+- Tests: >80% coverage REQUIRED
+
+### Frontend (TypeScript):
+- TypeScript strict mode
+- NO `any` types
+- Material-UI components ONLY
+- React Hook Form + Zod for forms
+```
+
+#### Mechanism 2: Prompt Templates
+
+**File:** `prompts/templates/base_template.txt`
+```
+{CORE_CONTEXT}
+
+---
+
+SESSION-ID: {session_id}
+PHASE: {current_phase}
+LAST COMPLETED: {last_completed_task}
+CURRENTLY: {current_task}
+NEXT: {next_task}
+
+---
+
+{TASK_SPECIFIC_PROMPT}
+
+---
+
+VALIDATION CHECKLIST (before responding):
+- [ ] SQLite only (no PostgreSQL mentioned)
+- [ ] Material-UI only (no Chakra/Radix)
+- [ ] Polish + English only (not 25 languages)
+- [ ] Type hints everywhere (Python)
+- [ ] Strict TypeScript (no `any`)
+```
+
+#### Mechanism 3: Validation Checksums
+
+**File:** `scripts/automation/context_validator.py`
+```python
+#!/usr/bin/env python3
+"""
+Validate AI output against core constraints.
+"""
+import re
+from pathlib import Path
+from typing import List, Tuple
+from rich.console import Console
+
+console = Console()
+
+class ContextValidator:
+    """Validate AI-generated code against project constraints."""
+
+    VIOLATIONS = {
+        'postgresql': r'(?i)(postgresql|postgres|psycopg2)',
+        'chakra': r'(?i)(chakra[-\s]ui|@chakra-ui)',
+        'radix': r'(?i)(radix[-\s]ui|@radix-ui)',
+        'oidc': r'(?i)(oidc|oauth|auth0|keycloak)',
+        'wrong_languages': r'(?i)(i18n.*(?:fr|de|es|it|nl|sv|da|fi|no|pt|ru|zh|ja|ko))',
+        'email_notif': r'(?i)(nodemailer|sendgrid|smtp|email.*notif)',
+        'discord_notif': r'(?i)(discord\.js|discord.*webhook)',
+        'telegram_notif': r'(?i)(telegram.*bot|telebot)',
+    }
+
+    def __init__(self, project_root: Path):
+        self.project_root = project_root
+
+    def validate_file(self, file_path: Path) -> List[Tuple[str, str]]:
+        """Check single file for violations.
+
+        Returns:
+            List of (violation_type, line) tuples
+        """
+        violations = []
+
+        if not file_path.exists():
+            return violations
+
+        content = file_path.read_text()
+
+        for violation_name, pattern in self.VIOLATIONS.items():
+            matches = re.finditer(pattern, content, re.MULTILINE)
+            for match in matches:
+                line_no = content[:match.start()].count('\n') + 1
+                line = content.split('\n')[line_no - 1]
+                violations.append((violation_name, f"L{line_no}: {line.strip()}"))
+
+        return violations
+
+    def validate_directory(self, directory: Path) -> bool:
+        """Validate all files in directory.
+
+        Returns:
+            True if no violations, False otherwise
+        """
+        console.print(f"[yellow]Validating {directory}...[/yellow]")
+
+        all_violations = {}
+
+        for file_path in directory.rglob('*.py'):
+            violations = self.validate_file(file_path)
+            if violations:
+                all_violations[str(file_path)] = violations
+
+        for file_path in directory.rglob('*.ts*'):
+            violations = self.validate_file(file_path)
+            if violations:
+                all_violations[str(file_path)] = violations
+
+        if all_violations:
+            console.print("[bold red]✗ CONSTRAINT VIOLATIONS DETECTED![/bold red]\n")
+
+            for file_path, violations in all_violations.items():
+                console.print(f"[red]{file_path}:[/red]")
+                for violation_type, line in violations:
+                    console.print(f"  - {violation_type}: {line}")
+                console.print()
+
+            return False
+        else:
+            console.print("[green]✓ No constraint violations[/green]")
+            return True
+
+    def validate_type_hints(self, backend_dir: Path) -> bool:
+        """Check if all Python files have type hints."""
+        console.print("[yellow]Validating type hints...[/yellow]")
+
+        import subprocess
+        result = subprocess.run(
+            ['mypy', str(backend_dir), '--strict'],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode == 0:
+            console.print("[green]✓ All type hints present[/green]")
+            return True
+        else:
+            console.print("[red]✗ Type hint errors:[/red]")
+            console.print(result.stdout)
+            return False
+
+if __name__ == '__main__':
+    validator = ContextValidator(Path.cwd())
+
+    backend_ok = validator.validate_directory(Path('backend'))
+    frontend_ok = validator.validate_directory(Path('frontend'))
+    types_ok = validator.validate_type_hints(Path('backend/app'))
+
+    if backend_ok and frontend_ok and types_ok:
+        console.print("[bold green]✓ All validations passed![/bold green]")
+        exit(0)
+    else:
+        console.print("[bold red]✗ Validation failed - review AI output![/bold red]")
+        exit(1)
+```
+
+**Usage:**
+```bash
+# After AI generates code
+python scripts/automation/context_validator.py
+
+# In git pre-commit hook
+python scripts/automation/context_validator.py || exit 1
+```
+
+#### Mechanism 4: Session Continuity Markers
+
+Every AI prompt includes:
+```markdown
+SESSION-ID: 2025-01-15-001
+PHASE: Phase 1 - Backend Foundation
+LAST COMPLETED: SQLAlchemy models (8/8)
+CURRENTLY: Pydantic schemas (6/10)
+NEXT: API routes
+
+CONTEXT REMINDER:
+- SQLite ONLY
+- MUI v5 ONLY
+- PL+EN ONLY
+```
+
+#### Mechanism 5: Model-Specific Context Strategies
+
+**GPT-4o (short context):**
+- Include only CORE_CONTEXT.md
+- Current task details
+- Minimal examples
+
+**Gemini 2.5 Pro (1M context):**
+- Include FULL context (all previous decisions, entire codebase)
+- Complete validation
+- Comprehensive review
+
+**Claude Sonnet 4.5 (200k context):**
+- Include CORE_CONTEXT.md
+- Current phase context
+- Related files only
+
+### Recovery Instructions
+
+**File:** `.context_checkpoint.md` (see root directory)
+
+If context is lost:
+1. READ `.context_checkpoint.md`
+2. READ `context/_CORE_CONTEXT.md`
+3. READ `AI_MODELS_REFERENCE.md`
+4. CHECK `context/_CURRENT_PHASE.md`
+5. RESUME from current task
 
 ---
 
@@ -147,17 +449,19 @@ pip install click rich anthropic google-generativeai openai
 
 ### 2. Task Assignment Matrix
 
-| Task Type | Primary AI | Secondary AI | Human Role |
-|-----------|-----------|--------------|------------|
-| **DB Schema → SQLAlchemy** | Claude Code | Copilot (docstrings) | Review relationships |
-| **Pydantic Schemas** | Claude Code | Gemini (validation) | Type safety check |
-| **API Routes** | Claude Code | Copilot (boilerplate) | Logic review |
-| **Service Layer** | Claude Code | - | **Critical review** |
-| **Unit Tests** | Copilot | Claude (complex) | Edge cases |
-| **React Components** | Claude Code | Copilot (props) | UX decisions |
-| **React Hooks** | Copilot | Claude (complex) | Quick review |
-| **Type Definitions** | Codegen (OpenAPI) | - | Review |
-| **Documentation** | Claude Code | - | Final polish |
+| Task Type | Primary AI | Secondary AI | Cost | Human Role |
+|-----------|-----------|--------------|------|------------|
+| **DB Schema → SQLAlchemy** | GPT-4o (free) | Claude S4.5 (complex) | $0 | Review relationships |
+| **Pydantic Schemas** | GPT-4o (free) | Gemini 2.5 Pro (validation) | $0 | Type safety check |
+| **API Routes** | GPT-4o (free) | Claude S4.5 (complex endpoints) | $0 | Logic review |
+| **Service Layer** | Claude S4.5 | Qwen 2.5 Coder (batch) | $0-3 | **Critical review** |
+| **Unit Tests** | GPT-4o (free) | GPT-4 Turbo (edge cases) | $0 | Edge cases |
+| **React Components** | GPT-4o (free) | Qwen 2.5 Coder (batch) | $0-2 | UX decisions |
+| **React Hooks** | GPT-4o (free) | Claude S4.5 (complex) | $0 | Quick review |
+| **Type Definitions** | Codegen (OpenAPI) | - | $0 | Review |
+| **Documentation** | GPT-4o (free) | - | $0 | Final polish |
+| **i18n Conversion** | Qwen 2.5 Coder (batch) | - | $0.40 | Verify translations |
+| **Code Review** | Gemini 2.5 Pro (1M context) | - | $0 | Final approval |
 
 ### 3. Workflow Pattern
 
@@ -339,7 +643,9 @@ Output: JSON format
 
 #### Task 1.1: Generate SQLAlchemy Models
 
-**Tool:** Claude Code
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
+**Fallback:** Claude Sonnet 4.5 (if complex relationships)
 
 **Input:**
 - `analysis/schema.sql`
@@ -424,7 +730,9 @@ python -c "from app.models.user import User; print('✓ Models import successful
 
 #### Task 1.2: Generate Pydantic Schemas
 
-**Tool:** Claude Code
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
+**Validation:** Gemini 2.5 Pro (check validation rules)
 
 **Claude Code Prompt:**
 ```
@@ -554,7 +862,10 @@ except ValueError as e:
 
 #### Task 1.3: Generate FastAPI Routes (CRUD)
 
-**Tool:** Claude Code + Copilot
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
+**Complex endpoints:** Claude Sonnet 4.5 (subscriptions, stats)
+**Validation:** Gemini 2.5 Pro (validate all endpoints match USER_STORIES.md)
 
 **Strategy:** Batch generation for all CRUD endpoints
 
@@ -780,7 +1091,10 @@ print(f'Endpoints: {len(router.routes)}')
 
 #### Task 1.4: Generate Service Layer
 
-**Tool:** Claude Code (complex logic) + Manual review
+**AI Model:** Claude Sonnet 4.5 (Claude Code) - complex business logic
+**Cost:** $0
+**Alternative:** Qwen 2.5 Coder (DeepInfra) for simple services (batch)
+**Budget:** ~$3.00 (if using DeepInfra for batch)
 
 **Claude Code Prompt:**
 ```
@@ -999,7 +1313,10 @@ Total: ~2050 lines (~60% AI-generated)
 
 #### Task 1.5: Generate Tests (Backend)
 
-**Tool:** Copilot (primary) + Claude Code (complex scenarios)
+**AI Model:** GPT-4o (Copilot Pro, free tier) - primary
+**Cost:** $0
+**Complex scenarios:** Claude Sonnet 4.5
+**Edge cases:** GPT-4 Turbo (ChatGPT Plus)
 
 **Copilot Chat Prompt:**
 ```
@@ -1151,7 +1468,8 @@ pytest backend/tests/unit/ -v --cov=app/services --cov-report=term-missing
 
 #### Task 2.1: Currency Service (Fixer API Integration)
 
-**Tool:** Claude Code
+**AI Model:** Claude Sonnet 4.5 (complex API integration logic)
+**Cost:** $0
 
 **Claude Code Prompt:**
 ```
@@ -1310,7 +1628,9 @@ Also implement:
 
 #### Task 2.2: Notification Service (Webhooks)
 
-**Tool:** Claude Code
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
+**Review:** Claude Sonnet 4.5 (webhook retry logic)
 
 **Similar pattern to Currency Service**
 
@@ -1320,7 +1640,9 @@ Also implement:
 
 #### Task 2.3: Logo Service (Pillow + Search)
 
-**Tool:** Claude Code + Copilot
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
+**Image processing:** Claude Sonnet 4.5 (Pillow logic review)
 
 **Automation:** 70%
 
@@ -1330,7 +1652,8 @@ Also implement:
 
 #### Task 3.1: Celery Tasks
 
-**Tool:** Claude Code
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
 
 **Automation:** 75%
 
@@ -1338,7 +1661,8 @@ Also implement:
 
 #### Task 3.2: OpenAPI Documentation
 
-**Tool:** Automatic (FastAPI) + Claude for examples
+**AI Model:** Automatic (FastAPI) + GPT-4o for examples
+**Cost:** $0
 
 **Automation:** 95%
 
@@ -1348,7 +1672,9 @@ Also implement:
 
 #### Task 4.1: MUI Theme Setup
 
-**Tool:** Claude Code
+**AI Model:** GPT-4o (Copilot Pro, free tier)
+**Cost:** $0
+**Review:** Claude Sonnet 4.5 (theme architecture)
 
 **Claude Code Prompt:**
 ```
@@ -1413,7 +1739,11 @@ export const createAppTheme = (
 
 #### Task 4.2: Generate React Components
 
-**Tool:** Claude Code (structure) + Copilot (completions)
+**AI Model:** GPT-4o (Copilot Pro, free tier) - primary
+**Cost:** $0
+**Complex components:** Claude Sonnet 4.5 (SubscriptionList, Dashboard)
+**Batch option:** Qwen 2.5 Coder (DeepInfra) for simple components
+**Budget:** ~$2.00 (if using DeepInfra for batch)
 
 **Claude Code Prompt (example):**
 ```
@@ -1592,6 +1922,45 @@ from typing import List, Dict
 
 console = Console()
 
+class UsageTracker:
+    """Track AI model usage and costs."""
+
+    def __init__(self):
+        self.usage = {
+            "gpt-4o": {"requests": 0, "cost": 0.0},
+            "claude-sonnet-4.5": {"requests": 0, "cost": 0.0},
+            "gemini-2.5-pro": {"requests": 0, "cost": 0.0},
+            "gpt-4-turbo": {"requests": 0, "cost": 0.0},
+            "qwen-2.5-coder": {"requests": 0, "cost": 0.0},
+        }
+        self.deepinfra_budget = 10.0
+        self.deepinfra_spent = 0.0
+
+    def log_request(self, model: str, tokens: int = 0):
+        """Log AI model request."""
+        if model in self.usage:
+            self.usage[model]["requests"] += 1
+
+            # Track DeepInfra costs
+            if model == "qwen-2.5-coder":
+                cost = (tokens / 1_000_000) * 0.27  # $0.27 per 1M tokens
+                self.usage[model]["cost"] += cost
+                self.deepinfra_spent += cost
+
+    def get_summary(self) -> str:
+        """Get usage summary."""
+        summary = "AI Model Usage Summary:\n"
+        for model, data in self.usage.items():
+            summary += f"  {model}: {data['requests']} requests, ${data['cost']:.2f}\n"
+        summary += f"\nDeepInfra Budget: ${self.deepinfra_budget:.2f}\n"
+        summary += f"DeepInfra Spent: ${self.deepinfra_spent:.2f}\n"
+        summary += f"DeepInfra Remaining: ${self.deepinfra_budget - self.deepinfra_spent:.2f}\n"
+        return summary
+
+    def check_budget(self) -> bool:
+        """Check if DeepInfra budget exceeded."""
+        return self.deepinfra_spent < self.deepinfra_budget
+
 class RefactorOrchestrator:
     """Main orchestrator for refactoring workflow."""
 
@@ -1600,6 +1969,44 @@ class RefactorOrchestrator:
         self.php_dir = project_root / "endpoints"
         self.backend_dir = project_root / "backend"
         self.frontend_dir = project_root / "frontend"
+        self.model_config = self.load_model_config()
+        self.usage_tracker = UsageTracker()
+
+    def load_model_config(self) -> Dict:
+        """Load AI model configuration."""
+        config_file = self.project_root / "config" / "ai_models.yaml"
+        if config_file.exists():
+            import yaml
+            with open(config_file) as f:
+                return yaml.safe_load(f)
+        return {}
+
+    def select_model(self, task_type: str, complexity: str = "medium") -> str:
+        """Select optimal AI model based on task type and complexity.
+
+        Args:
+            task_type: Type of task (e.g., 'models', 'schemas', 'routes')
+            complexity: Complexity level ('simple', 'medium', 'complex')
+
+        Returns:
+            Model identifier (e.g., 'gpt-4o', 'claude-sonnet-4.5')
+        """
+        # Default strategy: GPT-4o for 90% of tasks
+        if complexity == "simple":
+            return "gpt-4o"  # Copilot Pro, free tier
+
+        elif complexity == "complex":
+            if task_type in ["service_layer", "business_logic"]:
+                return "claude-sonnet-4.5"  # Claude Code
+            elif task_type == "validation":
+                return "gemini-2.5-pro"  # Google AI Pro, 1M context
+            elif task_type == "algorithms":
+                return "gpt-4-turbo"  # ChatGPT Plus
+
+        else:  # medium
+            return "gpt-4o"  # Default to free tier
+
+        return "gpt-4o"  # Fallback
 
     async def run_phase(self, phase: str):
         """Run specific phase of refactoring."""
@@ -2115,6 +2522,8 @@ async def test_something(db_session):
 - **5-6 weeks** instead of 11-15 weeks
 - **High quality code** (>80% test coverage, type-safe)
 - **Maintainable** (follows SOLID, well-documented)
+- **Total cost:** $10 (DeepInfra only, using optimized batch processing)
+- **Model distribution:** 90% GPT-4o (free), 5% Claude S4.5 (free), 3% Gemini (free), 2% others
 
 ### Next Steps
 

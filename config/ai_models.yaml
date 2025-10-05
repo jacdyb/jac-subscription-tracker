@@ -1,0 +1,224 @@
+# AI Models Configuration
+# Reference: AI_MODELS_REFERENCE.md
+
+models:
+  # Free tier models (unlimited usage)
+  gpt-4o:
+    provider: github_copilot
+    license: copilot_pro
+    context_window: 128000
+    cost_per_request: 0.0
+    daily_limit: null  # unlimited
+    strengths:
+      - boilerplate_code
+      - crud_operations
+      - tests_generation
+      - completions
+    use_for:
+      - db_models
+      - pydantic_schemas
+      - api_routes_simple
+      - tests_basic
+      - react_components_simple
+
+  # Complex reasoning (limited by daily messages)
+  claude-sonnet-4.5:
+    provider: claude_code
+    license: claude_pro
+    context_window: 200000
+    cost_per_request: 0.0
+    daily_limit: 500  # messages
+    strengths:
+      - complex_logic
+      - architecture
+      - multi_file_refactoring
+      - business_rules
+    use_for:
+      - service_layer
+      - business_logic
+      - complex_api_routes
+      - architecture_decisions
+
+  # Validation & review (1M context!)
+  gemini-2.5-pro:
+    provider: google_ai_pro
+    license: google_ai_pro
+    context_window: 1000000
+    cost_per_request: 0.0
+    daily_limit: 1000  # requests
+    strengths:
+      - code_review
+      - validation
+      - large_context_analysis
+    use_for:
+      - validation
+      - code_review
+      - endpoint_verification
+      - full_codebase_analysis
+
+  # Algorithms & debugging
+  gpt-4-turbo:
+    provider: chatgpt_plus
+    license: chatgpt_plus
+    context_window: 128000
+    cost_per_request: 0.0
+    daily_limit: 80  # messages per 3 hours
+    strengths:
+      - algorithms
+      - debugging
+      - edge_cases
+      - mathematical_operations
+    use_for:
+      - payment_calculations
+      - date_operations
+      - edge_case_tests
+      - debugging
+
+  # Batch processing (pay-per-use)
+  qwen-2.5-coder-32b:
+    provider: deepinfra
+    license: deepinfra_api
+    context_window: 32768
+    cost_per_million_tokens: 0.27
+    budget_total: 10.0
+    daily_limit: null
+    strengths:
+      - batch_processing
+      - cost_effective
+      - code_generation
+    use_for:
+      - i18n_conversion
+      - php_to_python_batch
+      - react_components_batch
+
+# Task assignments
+task_assignments:
+  # Phase 1: Backend Foundation
+  db_models:
+    primary: gpt-4o
+    fallback: claude-sonnet-4.5
+    complexity: medium
+
+  pydantic_schemas:
+    primary: gpt-4o
+    validator: gemini-2.5-pro
+    complexity: medium
+
+  api_routes_simple:
+    primary: gpt-4o
+    complexity: simple
+
+  api_routes_complex:
+    primary: claude-sonnet-4.5
+    complexity: complex
+
+  service_layer:
+    primary: claude-sonnet-4.5
+    batch_alternative: qwen-2.5-coder-32b
+    complexity: complex
+
+  backend_tests:
+    primary: gpt-4o
+    edge_cases: gpt-4-turbo
+    complexity: medium
+
+  # Phase 2: Backend Advanced
+  currency_service:
+    primary: claude-sonnet-4.5
+    complexity: complex
+
+  notification_service:
+    primary: gpt-4o
+    review: claude-sonnet-4.5
+    complexity: medium
+
+  logo_service:
+    primary: gpt-4o
+    review: claude-sonnet-4.5
+    complexity: medium
+
+  # Phase 3: Infrastructure
+  celery_tasks:
+    primary: gpt-4o
+    complexity: simple
+
+  openapi_docs:
+    primary: gpt-4o
+    complexity: simple
+
+  # Phase 4-6: Frontend
+  mui_theme:
+    primary: gpt-4o
+    review: claude-sonnet-4.5
+    complexity: medium
+
+  react_components_simple:
+    primary: gpt-4o
+    batch_alternative: qwen-2.5-coder-32b
+    complexity: simple
+
+  react_components_complex:
+    primary: claude-sonnet-4.5
+    complexity: complex
+
+  frontend_tests:
+    primary: gpt-4o
+    complexity: medium
+
+  # Special tasks
+  i18n_conversion:
+    primary: qwen-2.5-coder-32b
+    complexity: simple
+    estimated_cost: 0.40
+
+  code_review:
+    primary: gemini-2.5-pro
+    complexity: any
+
+# Fallback chains
+fallback_chains:
+  - name: standard
+    chain:
+      - gpt-4o
+      - claude-sonnet-4.5
+      - gemini-2.5-pro
+
+  - name: complex
+    chain:
+      - claude-sonnet-4.5
+      - gemini-2.5-pro
+      - gpt-4-turbo
+
+  - name: validation
+    chain:
+      - gemini-2.5-pro
+      - claude-sonnet-4.5
+
+# Usage limits tracking
+usage_limits:
+  claude-sonnet-4.5:
+    daily: 500
+    warn_at: 400
+
+  gpt-4-turbo:
+    per_3_hours: 80
+    warn_at: 60
+
+  gemini-2.5-pro:
+    daily: 1000
+    warn_at: 800
+
+  qwen-2.5-coder-32b:
+    budget_total: 10.0
+    warn_at: 8.0
+
+# Cost optimization rules
+optimization:
+  prefer_free_tier: true
+  max_deepinfra_per_task: 3.0
+  batch_threshold: 5  # Use batch processing for >=5 similar files
+  auto_fallback: true
+  context_strategy:
+    gpt-4o: minimal  # Include only essential context
+    claude-sonnet-4.5: moderate  # Include phase context
+    gemini-2.5-pro: full  # Include everything (1M context!)
