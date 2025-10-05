@@ -27,12 +27,14 @@
 ### Cel
 Automatyzacja maksymalnie dużej części refactoru (60-70%) przy wykorzystaniu AI tools dostępnych w VS Code, zachowując wysoką jakość kodu i pełną kontrolę nad procesem.
 
-### AI Tools Stack
-- **Claude Code** (Claude Pro) - complex logic, multi-file operations, architecture
-- **GitHub Copilot** (Copilot Pro) - boilerplate code, tests, quick completions
-- **Gemini Code Assist** (Google AI Pro) - validation, code review (1M context!)
-- **ChatGPT Plus** (GPT-4 Turbo) - algorithms, debugging, edge cases
-- **DeepInfra** (Qwen 2.5 Coder) - batch processing (budget: $10)
+### AI Tools Stack (Native VS Code Plugins)
+- **GitHub Copilot** (Copilot Pro, $10/mies) - PRIMARY: 90% tasków, GPT-4o free tier (unlimited)
+- **Claude Code** (Claude Pro, $20/mies) - Complex logic: 5% tasków, ~500 msg/day limit
+- **Gemini Code Assist** (Google AI Pro, FREE) - Validation: 3% tasków, 1M context, 1000/day limit
+- **Codex via ChatGPT Plus** ($20/mies) - Algorithms/debugging: 2% tasków, ~40-80 msg/3h limit
+- **DeepInfra API** (pay-per-use) - Batch processing: <1% tasków, max $10 budget
+
+**WAŻNE:** Wszystkie narzędzia działają przez **natywne pluginy VS Code** (OAuth), nie potrzeba dodatkowych API keys (poza DeepInfra).
 
 ### Kluczowe Zasady
 1. **AI generuje → Human review → Commit** (nigdy na odwrót)
@@ -74,22 +76,32 @@ Automatyzacja maksymalnie dużej części refactoru (60-70%) przy wykorzystaniu 
 | **Google AI Pro** | $0 | Gemini 2.5 Pro | **1M** | 1000/day | Validation, review |
 | **DeepInfra** | Pay-per-use | Qwen 2.5 Coder 32B | 32k | None | Batch ($10 total) |
 
-### Model Selection Strategy (4 Pillars + Batch)
+### Model Selection Strategy (5 Pillars Architecture)
 
-**Primary (90% tasks):** GPT-4o (Copilot Pro, free tier) - $0
-**Complex logic (5%):** Claude Sonnet 4.5 (Claude Code) - $0
-**Validation (3%):** Gemini 2.5 Pro (Google AI Pro) - $0
-**Algorithms (2%):** GPT-4 Turbo (ChatGPT Plus) - $0
-**Batch (<1%):** Qwen 2.5 Coder (DeepInfra) - $10 total
+**Pillar 1 - Primary (90% tasks):** GPT-4o via **GitHub Copilot Chat** (free tier, unlimited)
+**Pillar 2 - Complex Logic (5%):** Claude Sonnet 4.5 via **Claude Code** (~500 msg/day limit)
+**Pillar 3 - Validation (3%):** Gemini 2.5 Pro via **Gemini Code Assist** (1000/day limit)
+**Pillar 4 - Algorithms (2%):** GPT-4 Turbo via **ChatGPT Plus web** (80 msg/3h limit)
+**Pillar 5 - Batch (<1%):** Qwen 2.5 Coder via **DeepInfra API** (max $10 budget)
 
-**TOTAL PROJECT COST:** $10 (DeepInfra tylko)
+**TOTAL PROJECT COST:** $5-7 (tylko DeepInfra, reszta w ramach licencji)
 
-### DeepInfra Budget Allocation ($10)
+**OPTIMIZATION:** Maksymalizuj użycie Copilot (free tier, unlimited) → minimalizuj DeepInfra ($)
 
-1. i18n conversion (25 lang files → 2): **$0.40**
-2. PHP→Python services (batch): **$3.00**
-3. React components (batch): **$2.00**
-4. Buffer: **$4.60**
+### DeepInfra Budget Allocation (Max $10, Target $5-7)
+
+**Strategia:** Użyj DeepInfra TYLKO gdy:
+1. Batch >10 podobnych plików (ROI > równoległe Copilot)
+2. Copilot limit przekroczony (unlikely - free tier unlimited)
+3. Proste, powtarzalne taski
+
+**Alokacja:**
+1. i18n conversion (25 lang files → 2): **$0.40** ✅ (batch ma sens)
+2. React simple components (15-20x): **$1.50-2.00** ✅ (jeśli >10 podobnych)
+3. Buffer / fallback: **$3.00-5.00**
+4. **Reserved:** $3.00-5.00 (nie wydawaj od razu)
+
+**Zoptymalizowane:** $5-7 (zamiast pełnych $10)
 
 ---
 
@@ -415,53 +427,68 @@ pip install click rich anthropic google-generativeai openai
 
 ## Automation Strategy
 
-### 1. Delegation Model
+### 1. Delegation Model (Native Plugins + Lightweight Orchestration)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  YOU (Human)                                            │
-│  - Define requirements (USER_STORIES.md)               │
-│  - Review & approve AI output                          │
-│  - Make critical decisions                             │
-│  - Final quality check                                 │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  YOU (Human) - Orchestrator                                     │
+│  - Choose task from USER_STORIES.md                            │
+│  - Select AI based on complexity (AI_MODELS_REFERENCE.md)      │
+│  - Launch parallel sessions when possible                      │
+│  - Review & validate results                                   │
+└─────────────────────────────────────────────────────────────────┘
                           │
                           ▼
-┌─────────────────────────────────────────────────────────┐
-│  ORCHESTRATION LAYER (Python scripts)                   │
-│  - Batch processing PHP → Python                        │
-│  - Parallel AI execution                                │
-│  - Quality validation                                   │
-│  - Progress tracking                                    │
-└─────────────────────────────────────────────────────────┘
-          │                    │                    │
-          ▼                    ▼                    ▼
-┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│  Claude Code     │  │  Copilot         │  │  Gemini          │
-│  (Primary)       │  │  (Assistant)     │  │  (Validator)     │
-├──────────────────┤  ├──────────────────┤  ├──────────────────┤
-│ - Complex logic  │  │ - Boilerplate    │  │ - Code review    │
-│ - Multi-file ops │  │ - Tests          │  │ - Alternative    │
-│ - Refactoring    │  │ - Completions    │  │   solutions      │
-│ - Architecture   │  │ - Quick fixes    │  │ - Validation     │
-└──────────────────┘  └──────────────────┘  └──────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  LIGHTWEIGHT ORCHESTRATION (Shell + Python scripts)             │
+│  - scripts/orchestrate.sh - task launcher & parallel runner     │
+│  - scripts/automation/deepinfra_batch.py - batch processing     │
+│  - scripts/automation/context_validator.py - quality gates      │
+│  - VS Code split editor - parallel Copilot Chat sessions        │
+└─────────────────────────────────────────────────────────────────┘
+      │              │              │              │              │
+      ▼              ▼              ▼              ▼              ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Copilot  │  │ Claude   │  │ Gemini   │  │ ChatGPT  │  │DeepInfra │
+│ Chat     │  │ Code     │  │ Code     │  │ Plus     │  │ API      │
+│          │  │          │  │ Assist   │  │ (web)    │  │          │
+├──────────┤  ├──────────┤  ├──────────┤  ├──────────┤  ├──────────┤
+│ GPT-4o   │  │ Claude   │  │ Gemini   │  │ GPT-4    │  │ Qwen 2.5 │
+│ FREE     │  │ S 4.5    │  │ 2.5 Pro  │  │ Turbo    │  │ Coder    │
+│ Unlim.   │  │ ~500/day │  │ 1000/day │  │ 80/3h    │  │ $10 max  │
+├──────────┤  ├──────────┤  ├──────────┤  ├──────────┤  ├──────────┤
+│ 90% task │  │ 5% task  │  │ 3% task  │  │ 2% task  │  │ <1% task │
+│ Primary  │  │ Complex  │  │ Validate │  │ Algorith │  │ Batch    │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘
+
+PARALLEL EXECUTION (VS Code Split Editor):
+┌─────────┬─────────┬─────────┬─────────┐
+│ Copilot │ Copilot │ Copilot │ Copilot │  = 4 tasks jednocześnie
+│ Chat #1 │ Chat #2 │ Chat #3 │ Chat #4 │    (80 min → 20 min)
+└─────────┴─────────┴─────────┴─────────┘
 ```
 
-### 2. Task Assignment Matrix
+### 2. Task Assignment Matrix (Native Plugins)
 
-| Task Type | Primary AI | Secondary AI | Cost | Human Role |
-|-----------|-----------|--------------|------|------------|
-| **DB Schema → SQLAlchemy** | GPT-4o (free) | Claude S4.5 (complex) | $0 | Review relationships |
-| **Pydantic Schemas** | GPT-4o (free) | Gemini 2.5 Pro (validation) | $0 | Type safety check |
-| **API Routes** | GPT-4o (free) | Claude S4.5 (complex endpoints) | $0 | Logic review |
-| **Service Layer** | Claude S4.5 | Qwen 2.5 Coder (batch) | $0-3 | **Critical review** |
-| **Unit Tests** | GPT-4o (free) | GPT-4 Turbo (edge cases) | $0 | Edge cases |
-| **React Components** | GPT-4o (free) | Qwen 2.5 Coder (batch) | $0-2 | UX decisions |
-| **React Hooks** | GPT-4o (free) | Claude S4.5 (complex) | $0 | Quick review |
-| **Type Definitions** | Codegen (OpenAPI) | - | $0 | Review |
-| **Documentation** | GPT-4o (free) | - | $0 | Final polish |
-| **i18n Conversion** | Qwen 2.5 Coder (batch) | - | $0.40 | Verify translations |
-| **Code Review** | Gemini 2.5 Pro (1M context) | - | $0 | Final approval |
+| Task Type | Primary AI (Plugin) | Parallel? | Fallback | Cost | Human Role |
+|-----------|---------------------|-----------|----------|------|------------|
+| **DB Schema → SQLAlchemy** | Copilot Chat (GPT-4o) | ✅ 8× | Claude Code | $0 | Review relationships |
+| **Pydantic Schemas** | Copilot Chat (GPT-4o) | ✅ 10× | Gemini Assist | $0 | Type safety check |
+| **API Routes (simple)** | Copilot Chat (GPT-4o) | ✅ 12× | - | $0 | Quick review |
+| **API Routes (complex)** | Claude Code (S 4.5) | ❌ 3× seq | Copilot | $0 | Logic review |
+| **Service Layer (simple)** | Copilot Chat (GPT-4o) | ✅ 6× | - | $0 | Review |
+| **Service Layer (complex)** | Claude Code (S 4.5) | ❌ 3× seq | - | $0 | **Critical review** |
+| **Payment Calculations** | ChatGPT Plus (GPT-4 Turbo) | ❌ Web | Copilot | $0 | Verify math |
+| **Unit Tests** | Copilot Chat (GPT-4o) | ✅ 9× | - | $0 | Edge cases |
+| **React Components (simple)** | Copilot Chat (GPT-4o) | ✅ 15× | DeepInfra | $0 | UX review |
+| **React Components (complex)** | Claude Code (S 4.5) | ❌ 5× seq | - | $0 | UX decisions |
+| **i18n Conversion (25→2)** | DeepInfra (Qwen) | ✅ Batch | Manual | **$0.40** | Verify |
+| **Code Review (full codebase)** | Gemini Assist (2.5 Pro) | ❌ 1× | - | $0 | Final approval |
+
+**Legend:**
+- ✅ = Można uruchomić równolegle (split editor)
+- ❌ = Sekwencyjnie (zbyt złożone)
+- "×N" = liczba instancji/plików
 
 ### 3. Workflow Pattern
 

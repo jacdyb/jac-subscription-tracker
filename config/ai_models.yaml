@@ -1,224 +1,428 @@
-# AI Models Configuration
+# AI Models Configuration (Native VS Code Plugins Strategy)
 # Reference: AI_MODELS_REFERENCE.md
+#
+# OPTIMIZATION STRATEGY:
+# - 90% tasks: GitHub Copilot Chat (GPT-4o, FREE tier, unlimited, parallel!)
+# - 5% tasks: Claude Code (complex logic, sequential)
+# - 3% tasks: Gemini Code Assist (validation, 1M context)
+# - 2% tasks: ChatGPT Plus web (algorithms)
+# - <1% tasks: DeepInfra API (batch only, max $10)
+#
+# TOTAL COST: $5-7 (only DeepInfra, all others included in licenses)
 
-models:
-  # Free tier models (unlimited usage)
-  gpt-4o:
-    provider: github_copilot
-    license: copilot_pro
-    context_window: 128000
-    cost_per_request: 0.0
-    daily_limit: null  # unlimited
-    strengths:
-      - boilerplate_code
-      - crud_operations
-      - tests_generation
-      - completions
-    use_for:
-      - db_models
-      - pydantic_schemas
-      - api_routes_simple
-      - tests_basic
-      - react_components_simple
+# ==============================================================================
+# NATIVE PLUGINS (use OAuth, NO API keys needed)
+# ==============================================================================
 
-  # Complex reasoning (limited by daily messages)
-  claude-sonnet-4.5:
-    provider: claude_code
-    license: claude_pro
-    context_window: 200000
-    cost_per_request: 0.0
-    daily_limit: 500  # messages
-    strengths:
-      - complex_logic
-      - architecture
-      - multi_file_refactoring
-      - business_rules
-    use_for:
-      - service_layer
-      - business_logic
-      - complex_api_routes
-      - architecture_decisions
+native_plugins:
+  # ----------------------------------------------------------------------------
+  # PILLAR 1: GitHub Copilot Chat (PRIMARY - 90% of tasks)
+  # ----------------------------------------------------------------------------
+  copilot_chat:
+    provider: github_copilot_pro
+    license_cost_monthly: 10  # USD
+    interface: vscode_copilot_chat
+    authentication: oauth_github  # No API key needed!
+    access_method: "Ctrl+Shift+I / Cmd+Shift+I in VS Code"
 
-  # Validation & review (1M context!)
-  gemini-2.5-pro:
+    models:
+      gpt-4o:
+        model_id: "gpt-4o"
+        tier: "0x"  # FREE tier - UNLIMITED
+        context_window: 128000
+        daily_limit: null  # UNLIMITED!
+        cost_per_request: 0.0
+        parallel_execution: true  # Can run 8-12 sessions simultaneously
+
+        strengths:
+          - boilerplate_code
+          - crud_operations
+          - tests_generation
+          - schema_generation
+          - completions
+          - parallel_processing  # KEY advantage
+
+        use_cases:
+          - db_models: "8 files parallel"
+          - pydantic_schemas: "10 files parallel"
+          - api_routes_simple: "12 files parallel"
+          - tests_backend: "9 files parallel"
+          - react_components_simple: "15 files parallel"
+          - mui_components: "20 files parallel"
+
+        tips:
+          - "Use @workspace for auto-context"
+          - "Open split editor (2×4 grid) for 8 parallel sessions"
+          - "See: scripts/automation/PARALLEL_COPILOT_GUIDE.md"
+
+      gpt-4o-mini:
+        model_id: "gpt-4o-mini"
+        tier: "0x"  # FREE tier
+        context_window: 128000
+        daily_limit: null
+        note: "Even faster, use for very simple tasks"
+
+      # LIMITED models (available but save for when needed)
+      claude-sonnet-4:
+        model_id: "claude-sonnet-4-20250514"
+        tier: "1x"  # LIMITED tier
+        daily_limit: 50
+        note: "Available in Copilot Pro but LIMITED - prefer Claude Code plugin"
+
+      gemini-2-5-pro:
+        model_id: "gemini-2.5-pro"
+        tier: "1x"  # LIMITED tier
+        daily_limit: 50
+        note: "Available in Copilot Pro but LIMITED - prefer Gemini Code Assist plugin"
+
+  # ----------------------------------------------------------------------------
+  # PILLAR 2: Claude Code (COMPLEX LOGIC - 5% of tasks)
+  # ----------------------------------------------------------------------------
+  claude_code:
+    provider: claude_pro
+    license_cost_monthly: 20  # USD
+    interface: claude_code_vscode_panel
+    authentication: oauth_anthropic  # No API key needed!
+    access_method: "Claude Code panel (this interface you're using now)"
+
+    models:
+      claude-sonnet-4-5:
+        model_id: "claude-sonnet-4-20250514"
+        context_window: 200000
+        daily_limit: 500  # ~100 complex tasks/day
+        cost_per_request: 0.0
+        parallel_execution: false  # Sequential only (complex reasoning)
+
+        strengths:
+          - complex_business_logic
+          - architecture_decisions
+          - multi_file_refactoring
+          - deep_reasoning
+          - code_understanding
+
+        use_cases:
+          - service_layer_complex: "SubscriptionService, CurrencyService"
+          - api_routes_complex: "subscriptions (9 endpoints)"
+          - architecture: "Database schema analysis"
+          - refactoring: "PHP → Python complex logic"
+
+        tips:
+          - "Use for tasks requiring deep understanding"
+          - "Sequential execution (not parallel)"
+          - "Limit: ~500 messages/day (generous for 5% tasks)"
+
+  # ----------------------------------------------------------------------------
+  # PILLAR 3: Gemini Code Assist (VALIDATION - 3% of tasks)
+  # ----------------------------------------------------------------------------
+  gemini_code_assist:
     provider: google_ai_pro
-    license: google_ai_pro
-    context_window: 1000000
-    cost_per_request: 0.0
-    daily_limit: 1000  # requests
-    strengths:
-      - code_review
-      - validation
-      - large_context_analysis
-    use_for:
-      - validation
-      - code_review
-      - endpoint_verification
-      - full_codebase_analysis
+    license_cost_monthly: 0  # FREE!
+    interface: vscode_gemini_panel
+    authentication: oauth_google  # No API key needed!
+    access_method: "Gemini Code Assist panel in VS Code"
 
-  # Algorithms & debugging
-  gpt-4-turbo:
-    provider: chatgpt_plus
-    license: chatgpt_plus
-    context_window: 128000
-    cost_per_request: 0.0
-    daily_limit: 80  # messages per 3 hours
-    strengths:
-      - algorithms
-      - debugging
-      - edge_cases
-      - mathematical_operations
-    use_for:
-      - payment_calculations
-      - date_operations
-      - edge_case_tests
-      - debugging
+    models:
+      gemini-2-5-pro:
+        model_id: "gemini-2.5-pro"
+        context_window: 1000000  # 1M tokens - MASSIVE!
+        daily_limit: 1000
+        cost_per_request: 0.0
+        parallel_execution: false  # Use for review, not generation
 
-  # Batch processing (pay-per-use)
-  qwen-2.5-coder-32b:
+        strengths:
+          - code_review
+          - full_codebase_analysis  # Can analyze ENTIRE project!
+          - validation
+          - security_audit
+          - large_context_understanding
+
+        use_cases:
+          - code_review_full: "Review entire backend/app/ (all files)"
+          - validation_schemas: "Validate all 10 schemas against USER_STORIES.md"
+          - endpoint_verification: "Check all 60 endpoints"
+          - security_audit: "Scan for SQL injection, auth issues"
+
+        tips:
+          - "Use @workspace to include entire codebase (1M context!)"
+          - "Perfect for final review before commit"
+          - "Can compare backend + frontend simultaneously"
+
+  # ----------------------------------------------------------------------------
+  # PILLAR 4: ChatGPT Plus (ALGORITHMS - 2% of tasks)
+  # ----------------------------------------------------------------------------
+  chatgpt_plus:
+    provider: openai
+    license_cost_monthly: 20  # USD
+    interface: web_browser  # NOT VS Code plugin!
+    authentication: openai_account  # Login via browser
+    access_method: "https://chat.openai.com (web browser)"
+
+    models:
+      gpt-4-turbo:
+        model_id: "gpt-4-turbo"
+        context_window: 128000
+        daily_limit: 80  # messages per 3 hours
+        cost_per_request: 0.0
+        parallel_execution: false  # Web UI, single session
+
+        strengths:
+          - algorithms
+          - mathematical_operations
+          - complex_calculations
+          - debugging
+          - edge_case_analysis
+
+        use_cases:
+          - payment_calculations: "next_payment_date logic (months edge cases)"
+          - currency_conversions: "Fixer API rate calculations"
+          - date_operations: "relativedelta logic, Feb 29"
+          - edge_case_tests: "Subscription frequency validation"
+
+        tips:
+          - "Use for hardest math/algorithm problems"
+          - "80 msgs/3h is plenty for 2% of tasks"
+          - "Can use Canvas mode for iterative coding"
+
+      o1:
+        model_id: "o1"
+        context_window: 200000
+        daily_limit: 50  # messages per day
+        note: "Advanced reasoning - use for HARDEST problems only"
+
+# ==============================================================================
+# API-BASED (requires DEEPINFRA_API_KEY env var)
+# ==============================================================================
+
+api_services:
+  # ----------------------------------------------------------------------------
+  # PILLAR 5: DeepInfra (BATCH - <1% of tasks, ONLY when ROI positive)
+  # ----------------------------------------------------------------------------
+  deepinfra:
     provider: deepinfra
-    license: deepinfra_api
-    context_window: 32768
-    cost_per_million_tokens: 0.27
-    budget_total: 10.0
-    daily_limit: null
-    strengths:
-      - batch_processing
-      - cost_effective
-      - code_generation
-    use_for:
-      - i18n_conversion
-      - php_to_python_batch
-      - react_components_batch
+    license_cost_monthly: 0  # Pay-per-use
+    interface: python_script
+    authentication: api_key  # Requires: export DEEPINFRA_API_KEY='...'
+    access_method: "python scripts/automation/deepinfra_batch.py"
 
-# Task assignments
+    models:
+      qwen-2-5-coder-32b:
+        model_id: "Qwen/Qwen2.5-Coder-32B-Instruct"
+        context_window: 32768
+        cost_per_million_tokens: 0.27  # $0.27 per 1M tokens
+        budget_total: 10.0  # MAX budget
+        budget_target: "5.0-7.0"  # Optimized target
+        daily_limit: null  # No limit (only budget)
+        parallel_execution: true  # Batch processing
+
+        strengths:
+          - batch_processing
+          - cost_effective
+          - simple_repetitive_tasks
+          - i18n_conversion
+
+        use_cases:
+          - i18n_conversion: "25 lang files → 2 files ($0.40 estimated)"
+          - react_components_batch: "IF >10 similar simple components ($1.50-2.00)"
+          - fallback: "When Copilot quota exceeded (unlikely)"
+
+        budget_allocation:
+          i18n: 0.40
+          react_batch: "1.50-2.00"
+          buffer: "3.00-5.00"
+          reserved: "3.00-5.00"
+
+        tips:
+          - "Use ONLY when batch >10 files (ROI > parallel Copilot)"
+          - "Track budget: python scripts/automation/deepinfra_batch.py --task=budget"
+          - "Prefer Copilot parallel (free) over DeepInfra batch (paid)"
+
+# ==============================================================================
+# TASK ASSIGNMENTS (which AI for which task)
+# ==============================================================================
+
 task_assignments:
   # Phase 1: Backend Foundation
   db_models:
-    primary: gpt-4o
-    fallback: claude-sonnet-4.5
+    primary: copilot_chat.gpt-4o
+    parallel: 8  # 8 models simultaneously
+    fallback: claude_code.claude-sonnet-4-5
     complexity: medium
+    estimated_time_sequential: "80 min"
+    estimated_time_parallel: "10 min"
 
   pydantic_schemas:
-    primary: gpt-4o
-    validator: gemini-2.5-pro
+    primary: copilot_chat.gpt-4o
+    parallel: 10  # 10 schemas simultaneously
+    validator: gemini_code_assist.gemini-2-5-pro  # Review validation rules
     complexity: medium
+    estimated_time_parallel: "10 min + 5 min validation"
 
   api_routes_simple:
-    primary: gpt-4o
+    primary: copilot_chat.gpt-4o
+    parallel: 12  # 12 routes simultaneously
     complexity: simple
+    estimated_time_parallel: "10 min"
 
   api_routes_complex:
-    primary: claude-sonnet-4.5
+    primary: claude_code.claude-sonnet-4-5
+    parallel: false  # 3 routes sequentially
+    fallback: copilot_chat.gpt-4o
     complexity: complex
+    estimated_time_sequential: "45 min"
 
-  service_layer:
-    primary: claude-sonnet-4.5
-    batch_alternative: qwen-2.5-coder-32b
+  service_layer_simple:
+    primary: copilot_chat.gpt-4o
+    parallel: 6
+    complexity: medium
+
+  service_layer_complex:
+    primary: claude_code.claude-sonnet-4-5
+    parallel: false  # Sequential (business logic critical)
     complexity: complex
+    note: "Use Claude for: SubscriptionService, CurrencyService, StatsService"
+
+  payment_calculations:
+    primary: chatgpt_plus.gpt-4-turbo  # Best for math
+    complexity: complex
+    note: "next_payment_date, currency conversions"
 
   backend_tests:
-    primary: gpt-4o
-    edge_cases: gpt-4-turbo
+    primary: copilot_chat.gpt-4o
+    parallel: 9  # 9 test files
+    edge_cases: chatgpt_plus.gpt-4-turbo
     complexity: medium
-
-  # Phase 2: Backend Advanced
-  currency_service:
-    primary: claude-sonnet-4.5
-    complexity: complex
-
-  notification_service:
-    primary: gpt-4o
-    review: claude-sonnet-4.5
-    complexity: medium
-
-  logo_service:
-    primary: gpt-4o
-    review: claude-sonnet-4.5
-    complexity: medium
-
-  # Phase 3: Infrastructure
-  celery_tasks:
-    primary: gpt-4o
-    complexity: simple
-
-  openapi_docs:
-    primary: gpt-4o
-    complexity: simple
 
   # Phase 4-6: Frontend
   mui_theme:
-    primary: gpt-4o
-    review: claude-sonnet-4.5
+    primary: copilot_chat.gpt-4o
+    review: claude_code.claude-sonnet-4-5
     complexity: medium
 
   react_components_simple:
-    primary: gpt-4o
-    batch_alternative: qwen-2.5-coder-32b
+    primary: copilot_chat.gpt-4o
+    parallel: 15  # 15 components
+    batch_alternative: deepinfra.qwen-2-5-coder-32b  # IF >10 similar
     complexity: simple
+    note: "Prefer Copilot parallel (free) over DeepInfra batch"
 
   react_components_complex:
-    primary: claude-sonnet-4.5
+    primary: claude_code.claude-sonnet-4-5
+    parallel: false  # 5 complex components
     complexity: complex
-
-  frontend_tests:
-    primary: gpt-4o
-    complexity: medium
+    note: "Use Claude for: SubscriptionList, Dashboard, Statistics"
 
   # Special tasks
   i18n_conversion:
-    primary: qwen-2.5-coder-32b
+    primary: deepinfra.qwen-2-5-coder-32b  # Batch makes sense here
     complexity: simple
     estimated_cost: 0.40
+    note: "25 language files → 2 files (pl, en)"
 
-  code_review:
-    primary: gemini-2.5-pro
+  code_review_full:
+    primary: gemini_code_assist.gemini-2-5-pro  # 1M context!
     complexity: any
+    note: "Review entire codebase before final commit"
 
-# Fallback chains
+# ==============================================================================
+# FALLBACK CHAINS (when primary unavailable)
+# ==============================================================================
+
 fallback_chains:
-  - name: standard
-    chain:
-      - gpt-4o
-      - claude-sonnet-4.5
-      - gemini-2.5-pro
+  standard:
+    - copilot_chat.gpt-4o
+    - claude_code.claude-sonnet-4-5
+    - gemini_code_assist.gemini-2-5-pro
 
-  - name: complex
-    chain:
-      - claude-sonnet-4.5
-      - gemini-2.5-pro
-      - gpt-4-turbo
+  complex:
+    - claude_code.claude-sonnet-4-5
+    - chatgpt_plus.gpt-4-turbo
+    - gemini_code_assist.gemini-2-5-pro
 
-  - name: validation
-    chain:
-      - gemini-2.5-pro
-      - claude-sonnet-4.5
+  validation:
+    - gemini_code_assist.gemini-2-5-pro
+    - claude_code.claude-sonnet-4-5
 
-# Usage limits tracking
+# ==============================================================================
+# USAGE LIMITS & WARNINGS
+# ==============================================================================
+
 usage_limits:
-  claude-sonnet-4.5:
+  copilot_chat.gpt-4o:
+    daily: null  # UNLIMITED
+    warn_at: null  # No warning needed
+
+  claude_code.claude-sonnet-4-5:
     daily: 500
     warn_at: 400
+    note: "~100 complex tasks/day OK for 5% usage"
 
-  gpt-4-turbo:
+  chatgpt_plus.gpt-4-turbo:
     per_3_hours: 80
     warn_at: 60
+    note: "Plenty for 2% of tasks"
 
-  gemini-2.5-pro:
+  gemini_code_assist.gemini-2-5-pro:
     daily: 1000
     warn_at: 800
+    note: "More than enough for validation"
 
-  qwen-2.5-coder-32b:
+  deepinfra.qwen-2-5-coder-32b:
     budget_total: 10.0
+    budget_target: "5.0-7.0"
     warn_at: 8.0
+    track_file: ".deepinfra_budget.json"
 
-# Cost optimization rules
+# ==============================================================================
+# OPTIMIZATION RULES
+# ==============================================================================
+
 optimization:
-  prefer_free_tier: true
-  max_deepinfra_per_task: 3.0
-  batch_threshold: 5  # Use batch processing for >=5 similar files
-  auto_fallback: true
+  # Core strategy
+  prefer_free_tier: true  # Maximize Copilot (unlimited) usage
+  max_deepinfra_per_task: 3.0  # Don't overspend on single task
+  batch_threshold: 10  # Use batch only if >=10 similar files
+  auto_fallback: true  # Fallback to next in chain if primary fails
+
+  # Parallel execution
+  max_parallel_copilot: 12  # Max simultaneous Copilot Chat sessions
+  recommended_parallel: 8  # Sweet spot (performance vs usability)
+
+  # Context strategies (how much context to include)
   context_strategy:
-    gpt-4o: minimal  # Include only essential context
-    claude-sonnet-4.5: moderate  # Include phase context
-    gemini-2.5-pro: full  # Include everything (1M context!)
+    copilot_chat.gpt-4o: minimal  # Only essential (faster responses)
+    claude_code.claude-sonnet-4-5: moderate  # Phase context
+    gemini_code_assist.gemini-2-5-pro: full  # Everything! (1M context)
+    chatgpt_plus.gpt-4-turbo: minimal  # Web UI, paste manually
+    deepinfra.qwen-2-5-coder-32b: minimal  # API, programmatic
+
+  # Cost optimization
+  cost_tracking:
+    enabled: true
+    budget_file: ".deepinfra_budget.json"
+    alert_on_overspend: true
+
+  # Execution preferences
+  execution_order:
+    1: "Try Copilot parallel (free, fast)"
+    2: "If complex → Claude Code sequential"
+    3: "If batch >10 files → consider DeepInfra (but check ROI)"
+    4: "For validation → Gemini (1M context)"
+    5: "For algorithms → ChatGPT Plus"
+
+# ==============================================================================
+# QUICK REFERENCE
+# ==============================================================================
+
+quick_reference:
+  "Need to generate 8 similar files?": "Copilot parallel (8 sessions)"
+  "Complex business logic?": "Claude Code"
+  "Full codebase review?": "Gemini (1M context)"
+  "Math/algorithm problem?": "ChatGPT Plus (GPT-4 Turbo)"
+  "Batch >10 simple files?": "Consider DeepInfra (but Copilot parallel is free!)"
+  "Validation/security audit?": "Gemini Code Assist"
+
+  scripts:
+    orchestrate: "./scripts/orchestrate.sh"
+    deepinfra_batch: "python scripts/automation/deepinfra_batch.py"
+    parallel_guide: "scripts/automation/PARALLEL_COPILOT_GUIDE.md"
+    validator: "python scripts/automation/context_validator.py"
