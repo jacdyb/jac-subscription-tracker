@@ -103,8 +103,10 @@
 **Technologie:**
 - **Framework**: FastAPI 0.104+ (async, auto OpenAPI docs)
 - **ORM**: SQLAlchemy 2.0 (async support)
-- **Baza danych**: SQLite (zachowanie kompatybilności ze starą bazą)
-  - Opcjonalnie: PostgreSQL dla production (przez SQLAlchemy)
+- **Baza danych**: **SQLite tylko** (zachowanie pełnej kompatybilności ze starą bazą)
+  - Plik: `wallos.db`
+  - Async driver: `aiosqlite`
+  - Backup-friendly (prosty plik)
 - **Migracje**: Alembic
 - **Autoryzacja**:
   - JWT tokens (access 15min + refresh 7 days) - `python-jose`
@@ -347,25 +349,27 @@ GET    /api/v1/stats/timeline             # Historical spending (monthly/yearly)
   - React Query (TanStack Query) - server state
   - Zustand - client state
 - **Forms**: React Hook Form + Zod
-- **UI Library**:
-  - Opcja 1: Material-UI (MUI)
-  - Opcja 2: Chakra UI
-  - Opcja 3: Radix UI + Tailwind CSS
+- **UI Library**: **Material-UI (MUI) v5**
+  - Kompletny zestaw komponentów
+  - Built-in theming system (wspiera 8 kolorów + dark mode)
+  - Accessibility out-of-the-box
+  - TypeScript support
 - **Charts**: Recharts (dla statistics)
 - **Date Handling**: date-fns
-- **i18n**: react-i18next
+- **i18n**: react-i18next (**tylko polski + angielski**)
 - **HTTP Client**: Axios z interceptorami
-- **Icons**: Lucide React
+- **Icons**: Material Icons (wbudowane w MUI)
 - **Testing**: Vitest + React Testing Library
 
 #### Struktura Katalogów
 ```
 frontend/
 ├── public/
-│   ├── locales/              # pliki tłumaczeń JSON
+│   ├── locales/              # pliki tłumaczeń JSON (tylko 2 języki)
 │   │   ├── en/
-│   │   ├── pl/
-│   │   └── ...
+│   │   │   └── translation.json
+│   │   └── pl/
+│   │       └── translation.json
 │   └── manifest.json
 │
 ├── src/
@@ -603,7 +607,8 @@ frontend/
    - Vite + React + TypeScript
    - Router (React Router v6)
    - State management (React Query + Zustand)
-   - UI library (MUI / Chakra / Radix + Tailwind)
+   - UI library (Material-UI v5)
+   - MUI theming (8 kolorów + dark mode)
 
 2. **Auth Flow**
    - Login page
@@ -625,8 +630,9 @@ frontend/
 
 5. **i18n Setup**
    - react-i18next config
-   - 25 languages (reuse z PHP translations)
-   - Language switcher
+   - **2 języki: polski + angielski** (możliwość rozszerzenia w przyszłości)
+   - Language switcher (prosty toggle PL/EN)
+   - Tłumaczenia z PHP scripts/i18n/pl.js i en.js
 
 6. **API Client**
    - Axios instance
@@ -744,15 +750,14 @@ frontend/
 ## Kluczowe Decyzje Projektowe
 
 ### 1. Baza Danych
-**Opcja A** (rekomendowana): SQLite z opcją migracji do PostgreSQL
-- Zachowanie kompatybilności wstecznej
-- Łatwa migracja dla użytkowników
-- SQLAlchemy umożliwia późniejszą zmianę na PostgreSQL
-
-**Opcja B**: Od razu PostgreSQL
-- Lepsze wsparcie dla concurrent writes
-- Bardziej enterprise-ready
-- Wymaga dodatkowego kontenera
+**SQLite** (definitywna decyzja):
+- Zachowanie 100% kompatybilności ze starą bazą (wallos.db)
+- Zero konfiguracji - single file database
+- Łatwe backup/restore (kopiowanie pliku)
+- Wystarczające dla single-user / small household deployments
+- aiosqlite dla async support w FastAPI
+- Brak potrzeby dodatkowych kontenerów
+- Prostota deploymentu
 
 ### 2. Task Queue
 **Celery + Redis** zastąpi cronjobs:
@@ -776,17 +781,21 @@ frontend/
 - Storage: filesystem (z opcją S3 w przyszłości)
 
 ### 5. Internationalization
-- **Backend**: gettext lub custom dict
+- **Backend**: Python dict dla 2 języków (pl, en)
 - **Frontend**: react-i18next
-- Zachowanie wszystkich 25 języków
+- **Tylko 2 języki: polski + angielski**
+  - Konwersja z PHP: `scripts/i18n/pl.js` → `public/locales/pl/translation.json`
+  - Konwersja z PHP: `scripts/i18n/en.js` → `public/locales/en/translation.json`
 - Shared translation keys między BE/FE
+- Możliwość rozszerzenia w przyszłości (struktura gotowa)
 
-### 6. Themes
-React app powinna wspierać:
-- Light/Dark/Automatic mode
-- 8 kolorów (blue, green, red, yellow, purple, pink, orange, gray)
-- Custom CSS override
-- Zachowanie preferencji w localStorage + backend sync
+### 6. Themes (Material-UI)
+MUI Theme Provider wspiera:
+- **Light/Dark mode** (MUI built-in)
+- **8 kolorów** jako primary palette (blue, green, red, yellow, purple, pink, orange, gray)
+- **Custom CSS override** (MUI sx prop + GlobalStyles)
+- **Zachowanie preferencji** w localStorage + sync z backend (settings.color_theme, settings.dark_mode)
+- Automatyczny mode (system preference detection)
 
 ---
 
@@ -910,9 +919,11 @@ React app powinna wspierać:
    - React Hook Form (forms)
    - Zod (validation)
    - Axios (HTTP)
-   - react-i18next (i18n)
-   - MUI / Chakra / Radix (UI components)
+   - react-i18next (i18n - tylko pl + en)
+   - Material-UI v5 (UI components + theming)
+   - Material Icons (icons)
    - Recharts (charts)
+   - date-fns (date formatting)
 
 ### API Design Requirements
 1. **RESTful**

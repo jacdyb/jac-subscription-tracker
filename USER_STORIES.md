@@ -1,8 +1,13 @@
 # User Stories - Wallos Refactor (PHP → Python + React)
 
-**Wersja:** 1.0
+**Wersja:** 1.1
 **Data:** 2025-01-XX
 **Scope:** Simplified (bez Calendar, OIDC, AI recommendations, email/telegram/discord notifications)
+
+**Tech Stack:**
+- Backend: FastAPI + SQLAlchemy + **SQLite tylko** (wallos.db)
+- Frontend: React + TypeScript + **Material-UI v5**
+- i18n: **tylko polski + angielski** (2 języki)
 
 ---
 
@@ -47,7 +52,7 @@
 - Username: 3-50 characters, alphanumeric + underscore only
 - Email: valid email format
 - Password: min 8 characters, hashed with bcrypt
-- Default language: `en`
+- Default language: `en` (dostępne: `en`, `pl`)
 - Default currency: first currency in database or USD
 
 ---
